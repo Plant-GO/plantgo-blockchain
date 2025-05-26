@@ -1,0 +1,9 @@
+/target
+/static
+/tmp 
+/config
+/log
+/media
+
+.env
+.DS_Store
