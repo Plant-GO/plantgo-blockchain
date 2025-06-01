@@ -1,5 +1,6 @@
-use chrono::Utc;
-use std::collections::LinkedList;
+use chrono::{TimeDelta, Utc};
+use serde::de::Expected;
+use std::{collections::LinkedList, usize};
 
 use crate::{
     types::block::{Block, Transaction},
@@ -50,15 +51,17 @@ impl Blockchain {
         }
     }
 
-    pub fn add_new_block(self) {
+    pub fn add_new_block(&mut self) {
         let mut block = Block {
             index: self.last_block.clone().unwrap().index + 1,
-            prev_hash: block_hasher(self.last_block.unwrap().clone()),
+            prev_hash: block_hasher(self.last_block.clone().unwrap().clone()),
             nonce: 0,
             timestamp: Utc::now(),
             transactions: self.current_transactions.clone(),
-            merkle_root: transactions_hasher(self.current_transactions),
+            merkle_root: transactions_hasher(self.current_transactions.clone()),
         };
+
+        self.adjust_difficulty();
 
         mine_blocks(&mut block, self.difficulty);
     }
@@ -92,6 +95,31 @@ impl Blockchain {
         } else {
             log::error!("Genesis block doesn't have a previous block!");
             None
+        }
+    }
+
+    // For now we are checking at the mining time of last 10 blocks
+    pub fn adjust_difficulty(&mut self) {
+        let n = 10;
+        // for now I am setting the time per block to 5 minutes
+        let target_time_per_block = 30;
+        let tot_time: TimeDelta = self
+            .blocks
+            .iter()
+            .rev()
+            .take(n)
+            .map(|block| block.timestamp)
+            .collect::<Vec<_>>()
+            .windows(2)
+            .map(|w| w[0] - w[1])
+            .sum();
+        let total_time = tot_time.as_seconds_f64() as usize;
+        let expected_time = target_time_per_block * n;
+
+        if total_time < expected_time / 2 {
+            self.difficulty += 1;
+        } else if total_time > expected_time * 2 {
+            self.difficulty -= 1;
         }
     }
 }
