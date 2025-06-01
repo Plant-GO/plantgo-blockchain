@@ -25,7 +25,7 @@ pub struct Block {
     pub merkle_root: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, Disply)]
 pub struct Transaction {
     // the address of the sender
     pub sender: String,

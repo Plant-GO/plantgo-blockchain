@@ -1,7 +1,10 @@
 use chrono::Utc;
 use std::collections::LinkedList;
 
-use crate::types::block::{Block, Transaction};
+use crate::{
+    types::block::{Block, Transaction},
+    utils::hasher::{block_hasher, transactions_hasher},
+};
 
 pub struct Blockchain {
     // List of peers/blocks in the chain
@@ -16,6 +19,31 @@ pub struct Blockchain {
 }
 
 impl Blockchain {
+    // Genesis Block: First Block of the Chain
+    pub fn new(&mut self) {
+        let genesis_block = Block {
+            index: 0,
+            prev_hash: "0".to_string(),
+            nonce: 0,
+            timestamp: Utc::now(),
+            transactions: Vec::new(),
+            merkle_root: String::new(),
+        };
+
+        self.blocks.push_back(genesis_block);
+    }
+
+    pub fn add_new_block(self) {
+        let block = Block {
+            index: self.last_block.index + 1,
+            prev_hash: block_hasher(self.last_block.clone()),
+            nonce: 0,
+            timestamp: Utc::now(),
+            transactions: self.current_transactions.clone(),
+            merkle_root: transactions_hasher(self.current_transactions),
+        };
+    }
+
     pub fn set_new_transaction(
         &mut self,
         sender: String,
@@ -37,5 +65,9 @@ impl Blockchain {
 
     pub fn get_mempool(self) -> Vec<Transaction> {
         self.current_transactions
+    }
+
+    pub fn get_last_block(self) -> Block {
+        self.last_block
     }
 }
