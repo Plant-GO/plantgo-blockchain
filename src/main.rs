@@ -1,5 +1,7 @@
+use std::env::args;
+
 use clap::Parser;
-use plantgo_blockchain::types::args::Args;
+use plantgo_blockchain::{blockchain::block::Blockchain, types::args::Args};
 
 fn main() {
     let arguments = Args::parse();
@@ -10,4 +12,6 @@ fn main() {
         Err(e) => log::error!("Logger couldn't be initialized for Plant Go: {}", e),
     }
     log::info!("Plant Go Initialized!");
+    let mut blockchain = Blockchain::new();
+    blockchain.add_new_block(arguments);
 }

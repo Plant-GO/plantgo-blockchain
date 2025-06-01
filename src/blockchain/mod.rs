@@ -1,2 +1,2 @@
-pub(crate) mod block;
+pub mod block;
 pub(crate) mod miner;

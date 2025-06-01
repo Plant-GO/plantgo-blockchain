@@ -1,9 +1,11 @@
 use chrono::{TimeDelta, Utc};
-use serde::de::Expected;
 use std::{collections::LinkedList, usize};
 
 use crate::{
-    types::block::{Block, Transaction},
+    types::{
+        args::Args,
+        block::{Block, Transaction},
+    },
     utils::hasher::{block_hasher, transactions_hasher},
 };
 
@@ -28,8 +30,18 @@ pub struct Blockchain {
 }
 
 impl Blockchain {
+    pub fn new() -> Blockchain {
+        Blockchain {
+            blocks: LinkedList::new(),
+            current_transactions: Vec::new(),
+            archived_transactions: Vec::new(),
+            last_block: None,
+            difficulty: 0,
+        }
+    }
+
     // Genesis Block: First Block of the Chain
-    pub fn new(&mut self) -> Blockchain {
+    pub fn init(&mut self) -> Blockchain {
         let genesis_block = Block {
             index: 0,
             prev_hash: "0".to_string(),
@@ -51,7 +63,7 @@ impl Blockchain {
         }
     }
 
-    pub fn add_new_block(&mut self) {
+    pub fn add_new_block(&mut self, args: Args) {
         let mut block = Block {
             index: self.last_block.clone().unwrap().index + 1,
             prev_hash: block_hasher(self.last_block.clone().unwrap().clone()),
@@ -61,7 +73,9 @@ impl Blockchain {
             merkle_root: transactions_hasher(self.current_transactions.clone()),
         };
 
-        self.adjust_difficulty();
+        if self.last_block.clone().unwrap().index % 10 == 9 {
+            self.adjust_difficulty();
+        }
 
         mine_blocks(&mut block, self.difficulty);
     }
