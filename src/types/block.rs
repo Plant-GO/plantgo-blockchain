@@ -12,6 +12,9 @@ pub struct Block {
     // hash of last block in order to prevent tampering in the previous block
     pub prev_hash: String,
 
+    // hash of this block
+    // pub hash: String,
+
     // random number used for mining
     pub nonce: u32,
 
@@ -25,7 +28,7 @@ pub struct Block {
     pub merkle_root: String,
 }
 
-#[derive(Clone, Deserialize, Serialize, Disply)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Transaction {
     // the address of the sender
     pub sender: String,

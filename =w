@@ -51,16 +51,16 @@ impl Blockchain {
     }
 
     pub fn add_new_block(self) {
-        let mut block = Block {
-            index: self.last_block.clone().unwrap().index + 1,
-            prev_hash: block_hasher(self.last_block.unwrap().clone()),
+        let block = Block {
+            index: self.last_block.index + 1,
+            prev_hash: block_hasher(self.last_block.clone()),
             nonce: 0,
             timestamp: Utc::now(),
             transactions: self.current_transactions.clone(),
             merkle_root: transactions_hasher(self.current_transactions),
         };
 
-        mine_blocks(&mut block, self.difficulty);
+        mine_blocks(&mut block, self.difficulty)
     }
 
     pub fn set_new_transaction(
