@@ -1,5 +1,5 @@
 use chrono::{TimeDelta, Utc};
-use std::{collections::LinkedList, usize};
+use std::{collections::LinkedList, env, usize};
 
 use crate::{
     types::{
@@ -63,7 +63,7 @@ impl Blockchain {
         }
     }
 
-    pub fn add_new_block(&mut self, args: Args) {
+    pub fn add_new_block(&mut self) {
         let mut block = Block {
             index: self.last_block.clone().unwrap().index + 1,
             prev_hash: block_hasher(self.last_block.clone().unwrap().clone()),
@@ -73,7 +73,16 @@ impl Blockchain {
             merkle_root: transactions_hasher(self.current_transactions.clone()),
         };
 
-        if self.last_block.clone().unwrap().index % 10 == 9 {
+        if self.last_block.clone().unwrap().index
+            % env::var("NUMBER_OF_BLOCKS_GROUPED")
+                .unwrap_or_else(|_| "50".to_string())
+                .parse::<u32>()
+                .expect("Invalid Number of blocks")
+            == env::var("REMAINDER")
+                .unwrap_or_else(|_| "9".to_string())
+                .parse::<u32>()
+                .expect("Invalid REMAINDER tyoe")
+        {
             self.adjust_difficulty();
         }
 
@@ -115,6 +124,10 @@ impl Blockchain {
     // For now we are checking at the mining time of last 10 blocks
     pub fn adjust_difficulty(&mut self) {
         let n = 10;
+        let window_size = env::var("WINDOW_SIZE")
+            .unwrap_or_else(|_| "2".to_string())
+            .parse::<usize>()
+            .expect("Invalid Window size");
         // for now I am setting the time per block to 5 minutes
         let target_time_per_block = 30;
         let tot_time: TimeDelta = self
@@ -124,7 +137,7 @@ impl Blockchain {
             .take(n)
             .map(|block| block.timestamp)
             .collect::<Vec<_>>()
-            .windows(2)
+            .windows(window_size)
             .map(|w| w[0] - w[1])
             .sum();
         let total_time = tot_time.as_seconds_f64() as usize;
