@@ -1,4 +1,6 @@
 use chrono::{TimeDelta, Utc};
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{collections::LinkedList, env, usize};
 
 use crate::{
@@ -11,6 +13,7 @@ use crate::{
 
 use super::miner::mine_blocks;
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Blockchain {
     // List of peers/blocks in the chain
     pub blocks: LinkedList<Block>,
@@ -20,10 +23,7 @@ pub struct Blockchain {
     pub current_transactions: Vec<Transaction>,
 
     // Archived transactions, similar to a log/ledger for transactions
-    pub archived_transactions: Vec<Transaction>,
-
-    // reference for the last block which was added to the chain
-    pub(crate) last_block: Option<Block>,
+    pub archived_transactions: Vec<Vec<Transaction>>,
 
     // Difficulty level for mining the block
     pub(crate) difficulty: usize,
@@ -35,58 +35,69 @@ impl Blockchain {
             blocks: LinkedList::new(),
             current_transactions: Vec::new(),
             archived_transactions: Vec::new(),
-            last_block: None,
             difficulty: 0,
         }
     }
 
     // Genesis Block: First Block of the Chain
     pub fn init(&mut self) -> Blockchain {
-        let genesis_block = Block {
+        let mut genesis_block = Block {
             index: 0,
             prev_hash: "0".to_string(),
+            hash: None,
             nonce: 0,
             timestamp: Utc::now(),
             transactions: Vec::new(),
             merkle_root: String::new(),
         };
+        genesis_block.hash = Some(genesis_block.block_hasher());
 
+        log::info!("Creating Genesis Block!!!");
         self.blocks.push_back(genesis_block);
 
         Blockchain {
             blocks: self.blocks.clone(),
             current_transactions: Vec::new(),
             archived_transactions: Vec::new(),
-            last_block: None,
             // Default difficulty is set to 3
             difficulty: 3,
         }
     }
 
     pub fn add_new_block(&mut self) {
+        println!("Blockchain: {:?}\n", self);
+        println!("Last Block: {:?}\n", self.clone().get_last_block());
+
         let mut block = Block {
-            index: self.last_block.clone().unwrap().index + 1,
-            prev_hash: block_hasher(self.last_block.clone().unwrap().clone()),
+            index: self.clone().get_last_block().unwrap().index + 1,
+            prev_hash: block_hasher(self.clone().get_last_block().unwrap().clone()),
+            hash: None,
             nonce: 0,
             timestamp: Utc::now(),
             transactions: self.current_transactions.clone(),
             merkle_root: transactions_hasher(self.current_transactions.clone()),
         };
+        block.hash = Some(block.block_hasher());
 
-        if self.last_block.clone().unwrap().index
+        // it checks whether to adjust the difficulty or not after every 10 blocks
+        if self.clone().get_last_block().unwrap().index
             % env::var("NUMBER_OF_BLOCKS_GROUPED")
-                .unwrap_or_else(|_| "50".to_string())
+                .unwrap_or_else(|_| "10".to_string())
                 .parse::<u32>()
                 .expect("Invalid Number of blocks")
             == env::var("REMAINDER")
                 .unwrap_or_else(|_| "9".to_string())
                 .parse::<u32>()
-                .expect("Invalid REMAINDER tyoe")
+                .expect("Invalid REMAINDER type")
         {
             self.adjust_difficulty();
         }
 
-        mine_blocks(&mut block, self.difficulty);
+        self.blocks.push_back(block);
+        self.archived_transactions
+            .push(self.current_transactions.clone());
+        self.current_transactions.clear();
+        // mine_blocks(&mut block, self.difficulty);
     }
 
     pub fn set_new_transaction(
@@ -108,15 +119,14 @@ impl Blockchain {
         transaction
     }
 
-    pub fn get_mempool(self) -> Vec<Transaction> {
-        self.current_transactions
-    }
+    // pub fn get_mempool(self) -> Vec<Transaction> {
+    //     self.current_transactions
+    // }
 
     pub fn get_last_block(self) -> Option<Block> {
-        if self.last_block.is_some() {
-            self.last_block
+        if !self.blocks.is_empty() {
+            self.blocks.back().cloned()
         } else {
-            log::error!("Genesis block doesn't have a previous block!");
             None
         }
     }

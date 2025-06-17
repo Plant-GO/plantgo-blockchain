@@ -1,5 +1,3 @@
-use std::env::args;
-
 use clap::Parser;
 use dotenv::from_path;
 use plantgo_blockchain::{blockchain::block::Blockchain, types::args::Args};
@@ -19,5 +17,6 @@ fn main() {
     }
 
     let mut blockchain = Blockchain::new();
+    blockchain.init();
     blockchain.add_new_block();
 }

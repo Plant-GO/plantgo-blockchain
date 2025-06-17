@@ -1,10 +1,8 @@
-use std::sync::mpsc::{Receiver, Sender};
-
 use chrono::{DateTime, Utc};
-use clap::builder::Str;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Block {
     // Self explanatory
     pub index: u32,
@@ -13,7 +11,7 @@ pub struct Block {
     pub prev_hash: String,
 
     // hash of this block
-    // pub hash: String,
+    pub hash: Option<String>,
 
     // random number used for mining
     pub nonce: u32,
@@ -28,7 +26,29 @@ pub struct Block {
     pub merkle_root: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+impl Block {
+    pub fn block_hasher(&self) -> String {
+        let mut hasher = Sha256::new();
+        let transactions = match serde_json::to_string(&self.transactions) {
+            Ok(transactions) => transactions,
+            Err(e) => {
+                log::error!("Error occured while serializing transactions: {e}");
+                return Default::default();
+            }
+        };
+        let input = format!(
+            "{}{}{}{}{}{}",
+            self.index, self.prev_hash, self.nonce, self.timestamp, transactions, self.merkle_root
+        );
+        hasher.update(input.as_bytes());
+        let digest = hasher.finalize();
+        let hex_digest = hex::encode(digest);
+
+        hex_digest
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
     // the address of the sender
     pub sender: String,
