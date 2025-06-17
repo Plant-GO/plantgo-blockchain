@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
+use crate::blockchain::block;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Block {
     // Self explanatory
@@ -45,6 +47,22 @@ impl Block {
         let hex_digest = hex::encode(digest);
 
         hex_digest
+    }
+
+    pub fn proof_of_work(&mut self, difficulty: usize) -> Block {
+        let target = "0".repeat(difficulty);
+        let mut block_hash = self.clone().hash.expect("No hash found for the block");
+
+        while block_hash[..difficulty] != target {
+            self.nonce += 1;
+            block_hash = self.block_hasher()
+        }
+
+        self.hash = Some(block_hash.clone());
+
+        log::info!("Block {} mined: {}", self.index, block_hash);
+
+        self.clone()
     }
 }
 

@@ -11,8 +11,6 @@ use crate::{
     utils::hasher::{block_hasher, transactions_hasher},
 };
 
-use super::miner::mine_blocks;
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Blockchain {
     // List of peers/blocks in the chain
@@ -93,11 +91,12 @@ impl Blockchain {
             self.adjust_difficulty();
         }
 
-        self.blocks.push_back(block);
+        let verified_block = block.proof_of_work(self.difficulty);
+
+        self.blocks.push_back(verified_block);
         self.archived_transactions
             .push(self.current_transactions.clone());
         self.current_transactions.clear();
-        // mine_blocks(&mut block, self.difficulty);
     }
 
     pub fn set_new_transaction(
@@ -158,13 +157,5 @@ impl Blockchain {
         } else if total_time > expected_time * 2 {
             self.difficulty -= 1;
         }
-    }
-
-    pub fn proof_of_work(self) {
-        todo!()
-    }
-
-    pub fn valid_hash(self) {
-        todo!()
     }
 }
