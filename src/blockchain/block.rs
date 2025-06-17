@@ -159,4 +159,12 @@ impl Blockchain {
             self.difficulty -= 1;
         }
     }
+
+    pub fn proof_of_work(self) {
+        todo!()
+    }
+
+    pub fn valid_hash(self) {
+        todo!()
+    }
 }
