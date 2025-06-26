@@ -68,11 +68,11 @@ impl Block {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Transaction {
-    // the address of the sender
-    pub sender: String,
+    // the public key of the sender
+    pub sender_public_key: String,
 
-    // the address of the recipient
-    pub receiver: String,
+    // the public key of the recipient
+    pub receiver_public_key: String,
 
     // the amount of money being sent
     pub amount: u32,

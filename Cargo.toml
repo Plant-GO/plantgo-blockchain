@@ -14,3 +14,6 @@ dotenv = "0.15.0"
 sha2 = "0.10.9"
 serde_json = "1.0.140"
 hex = "0.4.3"
+axum = "0.8.4"
+tokio = { version = "1.45.1", features = ["full"] }
+sodiumoxide = "0.2.7"

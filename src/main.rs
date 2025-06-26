@@ -1,6 +1,8 @@
 use clap::Parser;
 use dotenv::from_path;
-use plantgo_blockchain::{blockchain::block::Blockchain, types::args::Args};
+use plantgo_blockchain::{
+    blockchain::block::Blockchain, chat, crypto::crypto_func, types::args::Args,
+};
 
 fn main() {
     let arguments = Args::parse();
@@ -16,6 +18,8 @@ fn main() {
         log::error!("Failed to log .env file: {}", err);
     }
 
+    chat::main();
+    crypto_func();
     let mut blockchain = Blockchain::new();
     blockchain.init();
     blockchain.add_new_block();

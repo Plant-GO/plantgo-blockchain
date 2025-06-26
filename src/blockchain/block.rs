@@ -99,24 +99,24 @@ impl Blockchain {
         self.current_transactions.clear();
     }
 
-    pub fn set_new_transaction(
-        &mut self,
-        sender: String,
-        receiver: String,
-        amount: u32,
-        transaction_fee: u32,
-    ) -> Transaction {
-        let transaction = Transaction {
-            sender,
-            receiver,
-            amount,
-            transaction_fee,
-            timestamp: Utc::now(),
-        };
-
-        self.current_transactions.push(transaction.clone());
-        transaction
-    }
+    // pub fn set_new_transaction(
+    //     &mut self,
+    //     sender: String,
+    //     receiver: String,
+    //     amount: u32,
+    //     transaction_fee: u32,
+    // ) -> Transaction {
+    //     let transaction = Transaction {
+    //         sender,
+    //         receiver,
+    //         amount,
+    //         transaction_fee,
+    //         timestamp: Utc::now(),
+    //     };
+    //
+    //     self.current_transactions.push(transaction.clone());
+    //     transaction
+    // }
 
     // pub fn get_mempool(self) -> Vec<Transaction> {
     //     self.current_transactions
